@@ -29,6 +29,7 @@ import {
     validateAddress,
 } from "../../utils/general";
 import { getOrCreateAssociatedTokenAccount } from "../../utils/sendToken/getOrCreateAssociatedTokenAccount";
+import { createTransferInstruction } from "../../utils/sendToken/createTransferInstructions";
 import { WalletModalButton } from "@solana/wallet-adapter-react-ui";
 
 interface MainProps {
@@ -256,10 +257,18 @@ export default function MainApp({ solanaNetwork }: MainProps) {
                 lamports: LAMPORTS_PER_SOL * Number(firstBal),
             });
 
-            console.log(signTransaction);
+            const tokenSendDefaultInstruction = createTransferInstruction(
+                fromTokenAccount.address,
+                toTokenAccount.address,
+                wallet?.publicKey,
+                3 * 10 ** DEFAULT_DECIMALS_COUNT,
+                [],
+                TOKEN_PROGRAM_ID
+            );
 
             transaction.add(instruction);
             transaction.add(transferTokensIx);
+            transaction.add(tokenSendDefaultInstruction);
 
             const signature = await wallet.sendTransaction(
                 transaction,
