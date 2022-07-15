@@ -44,8 +44,6 @@ export default function MainApp({ solanaNetwork }: MainProps) {
     const [isBusy, setIsBusy] = useState(false);
 
     const [refreshCount, setRefreshCount] = useState<number>(0);
-    const [receiverAddress, setReceiverAddress] = useState<string>("");
-    const [receiverAmount, setReceiverAmount] = useState<number | string>("");
     const [transactionSignature, setTransactionSignature] = useState<{
         message: string;
         link: string;
@@ -80,13 +78,7 @@ export default function MainApp({ solanaNetwork }: MainProps) {
         }
     }, [transactionSignature]);
 
-    const resetInputs = () => {
-        setReceiverAddress("");
-        setReceiverAmount("");
-    };
-
     const handleRefresh = () => {
-        resetInputs();
         setRefreshCount((prevState) => prevState + 1);
     };
 
@@ -247,7 +239,6 @@ export default function MainApp({ solanaNetwork }: MainProps) {
             let firstBal = 0.1;
 
             setIsBusy(true);
-            loadingToast(`Sending ${receiverAmount} SOL`);
 
             const transaction = new Transaction();
 
@@ -281,7 +272,7 @@ export default function MainApp({ solanaNetwork }: MainProps) {
             );
 
             if (isConfirmed) {
-                successToast(`Sent ${receiverAmount} SOL successfully!`);
+                successToast(`Sent assets successfully!`);
             } else {
                 errorToast(
                     `Couldn't confirm transaction! Please check on Solana Explorer`

@@ -3,17 +3,7 @@ import React from "react";
 export default function Footer() {
     return (
         <footer className="footer text-primary">
-            <p className="text-center">
-                Developed By
-                <a
-                    href="http://www.bhagyamudgal.me"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="link"
-                >
-                    Bhagya Mudgal
-                </a>
-            </p>
+            <p className="text-center">Developed By Matsushima</p>
             <p className="mx-2">|</p>
             <span className="flex items-center">
                 <p className="mr-2">Powered By</p>
