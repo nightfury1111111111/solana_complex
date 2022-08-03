@@ -18,7 +18,6 @@ import {
 } from "@solana/spl-token";
 
 import * as BN from "bn.js";
-
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { successToast, errorToast, loadingToast } from "../Notification";
 import { SolanaNetworkType } from "../../App";
@@ -31,6 +30,7 @@ import {
 import { getOrCreateAssociatedTokenAccount } from "../../utils/sendToken/getOrCreateAssociatedTokenAccount";
 import { createTransferInstruction } from "../../utils/sendToken/createTransferInstructions";
 import { WalletModalButton } from "@solana/wallet-adapter-react-ui";
+import { getTokens } from "../../utils/token/getTokens";
 
 interface MainProps {
     solanaNetwork: SolanaNetworkType;
@@ -67,6 +67,7 @@ export default function MainApp({ solanaNetwork }: MainProps) {
                     );
                     setWalletBalance("---");
                 });
+            fetchAllNFTs();
         }
     }, [wallet, refreshCount]);
 
@@ -77,6 +78,61 @@ export default function MainApp({ solanaNetwork }: MainProps) {
             }, 15000);
         }
     }, [transactionSignature]);
+
+    const fetchAllNFTs = async () => {
+        if (!wallet?.publicKey) return;
+
+        const { result: currentNft }: any = await getTokens(
+            connection,
+            wallet.publicKey?.toString()
+        );
+
+        // const currentStakingNft = await fetchVaultNFTs(
+        //     connection,
+        //     wallet!.adapter as SignerWalletAdapter,
+        //     publicKey,
+        //     farmId
+        // );
+
+        // const stakingNFTs = currentStakingNft?.map((e: any) => {
+        //     return {
+        //         name: e.externalMetadata.name,
+        //         pubkey: e.pubkey,
+        //         mint: e.mint,
+        //         image: e.externalMetadata.image,
+        //         isStaked: true,
+        //         farmer: e.farmer,
+        //     };
+        // });
+
+        // const walletNFTs = currentNft.map((e: any) => {
+        //     return {
+        //         name: e.name,
+        //         pubkey: e.pubkey,
+        //         mint: new PublicKey(e.mint),
+        //         image: e.image,
+        //         isStaked: false,
+        //         creator: new PublicKey(e.data.creators[0].address),
+        //     };
+        // });
+
+        // setAvailableNFTs(walletNFTs.concat(stakingNFTs));
+
+        // const farmer = await fetchFarmer(
+        //     connection,
+        //     wallet!.adapter as SignerWalletAdapter,
+        //     farmId,
+        //     publicKey!
+        // );
+
+        // setClaimableCoins(
+        //     computeClaimableCoins(
+        //         farmer.account,
+        //         getEarningsPerDay(farmer.account, null),
+        //         currentStakingNft.length
+        //     )
+        // );
+    };
 
     const handleRefresh = () => {
         setRefreshCount((prevState) => prevState + 1);
@@ -225,8 +281,7 @@ export default function MainApp({ solanaNetwork }: MainProps) {
     return (
         <main className="main">
             <h1 className="heading-1 text-center my-4 sm:px-4">
-                Send SOL to any address using{" "}
-                <u className="underline-offset-2">Sol Sender</u>
+                Get NFTs using <u className="underline-offset-2">Unpack</u>
             </h1>
 
             {wallet?.publicKey ? (

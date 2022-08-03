@@ -65,7 +65,7 @@ export default function Header({
         <header className="header">
             <div className="header-main">
                 <p className="text-primary font-semibold text-3xl">
-                    Sol Sender
+                    Unpack
                 </p>
 
                 {renderMobileMenuButton()}

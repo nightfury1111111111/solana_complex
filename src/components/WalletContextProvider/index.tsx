@@ -21,10 +21,11 @@ export default function WalletContextProvider({
     children: React.ReactNode;
     solanaNetwork: SolanaNetworkType;
 }) {
-    const endpoint = useMemo(
-        () => clusterApiUrl(solanaNetwork),
-        [solanaNetwork]
-    );
+    const endpoint = useMemo(() => {
+        if (solanaNetwork === "devnet")
+            return "https://metaplex.devnet.rpcpool.com/";
+        return clusterApiUrl(solanaNetwork);
+    }, [solanaNetwork]);
 
     const wallets = useMemo(
         () => [
