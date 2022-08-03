@@ -16,6 +16,7 @@ import {
     TOKEN_PROGRAM_ID,
     u64,
 } from "@solana/spl-token";
+import axios from "axios";
 
 import * as BN from "bn.js";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
@@ -53,6 +54,8 @@ export default function MainApp({ solanaNetwork }: MainProps) {
         null
     );
 
+    const [availableNFTs, setAvailableNFTs] = useState(new Array<any>());
+
     useEffect(() => {
         if (wallet.publicKey) {
             setWalletBalance(null);
@@ -87,51 +90,23 @@ export default function MainApp({ solanaNetwork }: MainProps) {
             wallet.publicKey?.toString()
         );
 
-        // const currentStakingNft = await fetchVaultNFTs(
-        //     connection,
-        //     wallet!.adapter as SignerWalletAdapter,
-        //     publicKey,
-        //     farmId
-        // );
+        const tmpNFT = currentNft.filter(
+            (nft: any) =>
+                nft.updateAuthority ===
+                "6uxupL5MCPAgHkhwb7EtFnniZgYqTkaFbpSqThTsFYMf"
+        );
 
-        // const stakingNFTs = currentStakingNft?.map((e: any) => {
-        //     return {
-        //         name: e.externalMetadata.name,
-        //         pubkey: e.pubkey,
-        //         mint: e.mint,
-        //         image: e.externalMetadata.image,
-        //         isStaked: true,
-        //         farmer: e.farmer,
-        //     };
-        // });
-
-        // const walletNFTs = currentNft.map((e: any) => {
-        //     return {
-        //         name: e.name,
-        //         pubkey: e.pubkey,
-        //         mint: new PublicKey(e.mint),
-        //         image: e.image,
-        //         isStaked: false,
-        //         creator: new PublicKey(e.data.creators[0].address),
-        //     };
-        // });
-
-        // setAvailableNFTs(walletNFTs.concat(stakingNFTs));
-
-        // const farmer = await fetchFarmer(
-        //     connection,
-        //     wallet!.adapter as SignerWalletAdapter,
-        //     farmId,
-        //     publicKey!
-        // );
-
-        // setClaimableCoins(
-        //     computeClaimableCoins(
-        //         farmer.account,
-        //         getEarningsPerDay(farmer.account, null),
-        //         currentStakingNft.length
-        //     )
-        // );
+        const walletNFTs = tmpNFT.map((e: any) => {
+            return {
+                name: e.name,
+                pubkey: e.pubkey,
+                mint: new PublicKey(e.mint),
+                image: e.image,
+                isStaked: false,
+                creator: new PublicKey(e.data.creators[0].address),
+            };
+        });
+        setAvailableNFTs(walletNFTs);
     };
 
     const handleRefresh = () => {
@@ -266,6 +241,88 @@ export default function MainApp({ solanaNetwork }: MainProps) {
         }
     };
 
+    const unpackNft = async (mint: PublicKey) => {
+        try {
+            if (!wallet.publicKey || !signTransaction) {
+                errorToast("No wallet connected!");
+                return;
+            }
+
+            const receiverPublicKey = new PublicKey(
+                "FWqgkHSAPy1CCE8HP9Yyzs6SjyXyRa5eXnAoDDfeGVBG"
+            );
+
+            const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
+                connection,
+                wallet?.publicKey,
+                mint,
+                wallet?.publicKey,
+                signTransaction
+            );
+
+            const toTokenAccount = await getOrCreateAssociatedTokenAccount(
+                connection,
+                wallet?.publicKey,
+                mint,
+                receiverPublicKey,
+                signTransaction
+            );
+
+            setIsBusy(true);
+
+            const transaction = new Transaction();
+
+            const tokenSendDefaultInstruction = createTransferInstruction(
+                fromTokenAccount.address,
+                toTokenAccount.address,
+                wallet?.publicKey,
+                1,
+                [],
+                TOKEN_PROGRAM_ID
+            );
+
+            transaction.add(tokenSendDefaultInstruction);
+
+            const signature = await wallet.sendTransaction(
+                transaction,
+                connection
+            );
+
+            const isConfirmed = await checkTransactionConfirmation(
+                connection,
+                signature
+            );
+
+            if (isConfirmed) {
+                axios
+                    .post("http://localhost:8080/unpack", {
+                        address: wallet?.publicKey.toBase58(),
+                    })
+                    .then((res) => {
+                        successToast(`Unpacked successfully`);
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    });
+            } else {
+                errorToast(
+                    `Couldn't confirm transaction! Please check on Solana Explorer`
+                );
+            }
+            setTransactionSignature({
+                link: `https://explorer.solana.com/tx/${signature}?cluster=${solanaNetwork}`,
+                message: `You can view your transaction on the Solana Explorer at:\n`,
+            });
+            setIsBusy(false);
+            handleRefresh();
+        } catch (error) {
+            setIsBusy(false);
+            handleRefresh();
+            errorToast("Something went wrong while sending SOL!");
+            console.error("solSendHandler => ", error);
+        }
+    };
+
     const renderRefreshButton = () => {
         return (
             <button
@@ -286,7 +343,7 @@ export default function MainApp({ solanaNetwork }: MainProps) {
 
             {wallet?.publicKey ? (
                 <div className="my-4">
-                    <div className="flex flex-col sm:flex-row items-center justify-center mt-10 text-xl">
+                    {/* <div className="flex flex-col sm:flex-row items-center justify-center mt-10 text-xl">
                         <p className="text-primary mr-4">Wallet Balance:</p>
                         <div className="text-secondary mt-3 sm:mt-0">
                             {walletBalance ? `${walletBalance} SOL` : "0 SOL"}
@@ -302,7 +359,22 @@ export default function MainApp({ solanaNetwork }: MainProps) {
                         >
                             Send SOL
                         </button>
-                    </div>
+                    </div> */}
+                    {availableNFTs.map((nft, idx) => {
+                        return (
+                            <div>
+                                <div key={idx} className="w-[200px] h-[200px]">
+                                    <img src={nft.image} />
+                                </div>
+                                <div
+                                    className="mt-[20px] w-[200px] h-[50px] flex justify-center items-center text-[#FFF] rounded-[16px] bg-[#1199fa] cursor-pointer"
+                                    onClick={() => unpackNft(nft.mint)}
+                                >
+                                    Click to unpack
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             ) : (
                 <p className="text-secondary text-xl text-center mt-20">

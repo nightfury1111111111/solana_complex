@@ -90,7 +90,6 @@ export const getTokens = async (
 
   
   const result = await getNft(connection, myArrayOfAccountsDatas);
-  console.log(result)
 
   if (result) return { result };
 };
